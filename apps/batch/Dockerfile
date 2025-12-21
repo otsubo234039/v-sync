@@ -12,8 +12,8 @@ RUN apk add --no-cache \
 # Copy Gemfile
 COPY Gemfile Gemfile.lock* ./
 
-# Install gems
-RUN bundle install --deployment --without development test
+# Install gems without relying on Gemfile.lock during build
+RUN bundle install --without development test
 
 # Copy application files
 COPY . .

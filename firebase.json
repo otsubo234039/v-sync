@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "v-sync-8909f"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
