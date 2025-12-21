@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+ruby '3.2.0'
+
+gem 'aws-sdk-ec2', '~> 1.0'
+gem 'aws-sdk-s3', '~> 1.0'
+gem 'aws-sdk-cloudwatch', '~> 1.0'
+gem 'dotenv', '~> 2.8'
+gem 'logger', '~> 1.5'

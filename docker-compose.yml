@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  batch:
+    build:
+      context: ./apps/batch
+      dockerfile: Dockerfile
+    container_name: v-sync-batch
+    environment:
+      - AWS_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RAILS_LOG_TO_STDOUT=true
+    volumes:
+      - ./apps/batch:/app
+      - ./apps/batch/logs:/app/logs
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    networks:
+      - v-sync-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  v-sync-network:
+    driver: bridge

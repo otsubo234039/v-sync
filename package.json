@@ -1,0 +1,25 @@
+{
+  "name": "v-sync",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Video synchronization platform",
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/batch",
+    "start": "npm start --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "type-check": "npm run type-check --workspace=apps/web",
+    "format": "npm run format --workspace=apps/web",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "workspaces": [
+    "apps/web",
+    "apps/batch"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
