@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { registerUser, loginUser, logoutUser, onAuthChange } from '../../lib/auth';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -11,16 +10,23 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      setUserEmail(user ? user.email ?? null : null);
-    });
-    return () => unsubscribe();
+    let unsubscribe: (() => void) | undefined;
+    (async () => {
+      const { onAuthChange } = await import('../../lib/auth');
+      unsubscribe = onAuthChange((user) => {
+        setUserEmail(user ? user.email ?? null : null);
+      });
+    })();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const handleRegister = async () => {
     setError(null);
     setLoading(true);
     try {
+      const { registerUser } = await import('../../lib/auth');
       await registerUser(email, password);
     } catch (e) {
       setError((e as Error).message);
@@ -33,6 +39,7 @@ export default function AuthPage() {
     setError(null);
     setLoading(true);
     try {
+      const { loginUser } = await import('../../lib/auth');
       await loginUser(email, password);
     } catch (e) {
       setError((e as Error).message);
@@ -45,6 +52,7 @@ export default function AuthPage() {
     setError(null);
     setLoading(true);
     try {
+      const { logoutUser } = await import('../../lib/auth');
       await logoutUser();
       setEmail('');
       setPassword('');
