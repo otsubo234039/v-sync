@@ -17,3 +17,32 @@ body {
   color: #f9fafb;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+
+/* 全体のスクロールバーをカスタマイズ */
+::-webkit-scrollbar {
+  width: 6px;  /* 縦スクロールバーの幅 */
+  height: 6px; /* 横スクロールバーの高さ */
+}
+
+/* スクロールバーの背景（トラック） */
+::-webkit-scrollbar-track {
+  background: transparent; /* 背景は透明にして馴染ませる */
+}
+
+/* スクロールバーの持ち手（サム） */
+::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700: 目立たないグレー */
+  border-radius: 3px;   /* 角を丸く */
+}
+
+/* 持ち手にマウスを乗せた時 */
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* slate-600: 少し明るく */
+}
+
+/* コンテンツ内の特定のエリア用ユーティリティクラス（もし微調整が必要な場合用） */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+}
