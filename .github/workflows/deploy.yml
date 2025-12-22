@@ -147,7 +147,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy to AWS EC2
     needs: build-batch
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Temporarily disabled until AWS credentials are configured
+    if: false
 
     steps:
       - uses: actions/checkout@v3
