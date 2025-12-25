@@ -30,3 +30,14 @@ export type Member = {
   color: string; // テーマカラー (Tailwindのクラス名)
   channelUrl?: string; // YouTube等のURL（任意）
 };
+
+export type Booking = {
+  id: string;
+  resourceId: string;
+  resourceName: string;
+  applicantName: string;
+  startAt: any;
+  endAt: any;
+  purpose: string;
+  status: "confiremd" | "pending"
+}
