@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "V-Sync",
   description: "VTuber Management System",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
