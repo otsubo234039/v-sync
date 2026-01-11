@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot, addDoc, Timestamp, getDocs } from "firebase/firestore";
 import StaffSidebar from "@/components/staff/StaffSidebar";
+// ★ テーマ機能を追加
+import { useTheme } from "@/context/ThemeContext";
 
 // 型定義
 type Message = {
@@ -30,6 +32,8 @@ const GROUP_ROOMS: ChatRoom[] = [
 
 export default function StaffChatPage() {
   const { user, loading } = useAuth();
+  // ★ テーマ情報を取得
+  const { backgroundStyle, baseTextColor, themeMode } = useTheme();
   
   const [selectedRoomId, setSelectedRoomId] = useState<string>("general");
   const [selectedRoomName, setSelectedRoomName] = useState<string>("General");
@@ -100,11 +104,14 @@ export default function StaffChatPage() {
     setSelectedRoomName(member.name);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-emerald-500">LOADING...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-brand">LOADING...</div>;
 
   return (
-    // ★変更点: fixed をやめて flex h-screen に変更 (これで自然に配置されます)
-    <div className="flex h-screen w-full bg-[#020907] text-slate-200 font-sans overflow-hidden">
+    // ★ 共通の背景スタイルを適用
+    <div 
+      className={`flex h-screen w-full font-sans overflow-hidden ${baseTextColor}`}
+      style={backgroundStyle}
+    >
       
       {/* サイドバー */}
       <StaffSidebar />
@@ -112,34 +119,64 @@ export default function StaffChatPage() {
       {/* メインエリア */}
       <main className="flex-1 flex h-full overflow-hidden relative">
         
-        {/* 背景エフェクト（邪魔しないように背面へ） */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-           <div className="absolute bottom-0 left-0 right-0 h-[300px] bg-gradient-to-t from-[#020907] to-transparent" />
-           <div className="w-full h-full opacity-30" style={{ backgroundImage: `linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
-        </div>
-
-        {/* 左カラム：ルームリスト */}
-        <div className="w-64 bg-[#0A2A22]/90 border-r border-emerald-500/20 flex flex-col z-10 shrink-0">
-          <div className="p-4 border-b border-emerald-500/20">
-            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <span className="text-emerald-500">💬</span> Chat
+        {/* 左カラム：ルームリスト (白黒対応) */}
+        <div className={`w-64 border-r border-brand/20 flex flex-col z-10 shrink-0 backdrop-blur-sm ${themeMode === 'dark' ? 'bg-black/40' : 'bg-white/60'}`}>
+          <div className="p-4 border-b border-brand/20">
+            <h1 className={`text-xl font-bold tracking-tight flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              <span className="text-brand">💬</span> Chat
             </h1>
           </div>
 
           <div className="flex p-2 gap-2">
-            <button onClick={() => setActiveTab('groups')} className={`flex-1 py-1 text-xs font-bold rounded transition ${activeTab === 'groups' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-[#0F3F33]'}`}>GROUPS</button>
-            <button onClick={() => setActiveTab('direct')} className={`flex-1 py-1 text-xs font-bold rounded transition ${activeTab === 'direct' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-[#0F3F33]'}`}>DIRECT</button>
+            <button 
+              onClick={() => setActiveTab('groups')} 
+              className={`flex-1 py-1 text-xs font-bold rounded transition 
+                ${activeTab === 'groups' 
+                  ? 'bg-brand text-black shadow-lg shadow-brand/20' 
+                  : 'text-slate-400 hover:text-brand hover:bg-brand/10'
+                }`}
+            >
+              GROUPS
+            </button>
+            <button 
+              onClick={() => setActiveTab('direct')} 
+              className={`flex-1 py-1 text-xs font-bold rounded transition 
+                ${activeTab === 'direct' 
+                  ? 'bg-brand text-black shadow-lg shadow-brand/20' 
+                  : 'text-slate-400 hover:text-brand hover:bg-brand/10'
+                }`}
+            >
+              DIRECT
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
             {activeTab === 'groups' && GROUP_ROOMS.map(room => (
-              <button key={room.id} onClick={() => { setSelectedRoomId(room.id); setSelectedRoomName(room.name); }} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${selectedRoomId === room.id ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:bg-[#0F3F33] hover:text-white'}`}>
+              <button 
+                key={room.id} 
+                onClick={() => { setSelectedRoomId(room.id); setSelectedRoomName(room.name); }} 
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 
+                  ${selectedRoomId === room.id 
+                    ? 'bg-brand/20 text-brand border border-brand/30' 
+                    : 'text-slate-400 hover:bg-brand/5 hover:text-brand'
+                  }`}
+              >
                 {room.name}
               </button>
             ))}
             {activeTab === 'direct' && members.map(member => (
-              <button key={member.id} onClick={() => handleSelectDM(member)} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-3 ${selectedRoomName === member.name ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:bg-[#0F3F33] hover:text-white'}`}>
-                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-white">{member.icon}</div>
+              <button 
+                key={member.id} 
+                onClick={() => handleSelectDM(member)} 
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-3 
+                  ${selectedRoomName === member.name 
+                    ? 'bg-brand/20 text-brand border border-brand/30' 
+                    : 'text-slate-400 hover:bg-brand/5 hover:text-brand'
+                  }`}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${themeMode === 'dark' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                  {member.icon}
+                </div>
                 {member.name}
               </button>
             ))}
@@ -148,18 +185,17 @@ export default function StaffChatPage() {
 
         {/* 右カラム：チャットエリア */}
         <div className="flex-1 flex flex-col z-10 min-w-0 bg-transparent">
-          <header className="h-16 border-b border-emerald-500/20 bg-[#020907]/60 backdrop-blur flex items-center px-6 justify-between shrink-0">
-            <div className="font-bold text-white flex items-center gap-2">
-              <span className="text-emerald-500 text-lg">{activeTab === 'groups' ? '#' : '@'}</span>
+          <header className={`h-16 border-b border-brand/20 backdrop-blur flex items-center px-6 justify-between shrink-0 ${themeMode === 'dark' ? 'bg-black/20' : 'bg-white/40'}`}>
+            <div className={`font-bold flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              <span className="text-brand text-lg">{activeTab === 'groups' ? '#' : '@'}</span>
               {selectedRoomName}
             </div>
           </header>
 
           {/* メッセージ表示エリア */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-            {/* 動作確認用のダミー表示（メッセージが0件のときだけ出る） */}
             {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-emerald-500/30 select-none">
+              <div className="h-full flex flex-col items-center justify-center text-brand/30 select-none">
                 <p className="text-4xl mb-4 opacity-50">📨</p>
                 <p>No messages yet.</p>
                 <p className="text-sm mt-2">Send a message to start scrolling!</p>
@@ -171,10 +207,19 @@ export default function StaffChatPage() {
               return (
                 <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                   <div className={`flex items-end gap-2 max-w-[85%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-lg ${isMe ? "bg-emerald-500 text-black" : "bg-slate-700 text-white"}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-lg ${isMe ? "bg-brand text-black" : "bg-slate-700 text-white"}`}>
                       {msg.senderName.charAt(0)}
                     </div>
-                    <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-md break-words whitespace-pre-wrap ${isMe ? "bg-emerald-600 text-white rounded-tr-none" : "bg-[#0F3F33] border border-emerald-500/20 text-slate-200 rounded-tl-none"}`}>
+                    
+                    {/* 吹き出し: 自分の発言は推し色、相手の発言はテーマに合わせて変化 */}
+                    <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-md break-words whitespace-pre-wrap 
+                      ${isMe 
+                        ? "bg-brand text-black rounded-tr-none shadow-brand/20" 
+                        : themeMode === 'dark' 
+                          ? "bg-brand-dim border border-brand/20 text-slate-200 rounded-tl-none" 
+                          : "bg-white border border-brand/20 text-slate-800 rounded-tl-none shadow-sm"
+                      }
+                    `}>
                       {msg.text}
                     </div>
                   </div>
@@ -188,16 +233,26 @@ export default function StaffChatPage() {
           </div>
 
           {/* 入力エリア */}
-          <div className="p-4 bg-[#020907]/80 border-t border-emerald-500/20 backdrop-blur shrink-0">
+          <div className={`p-4 border-t border-brand/20 backdrop-blur shrink-0 ${themeMode === 'dark' ? 'bg-black/60' : 'bg-white/60'}`}>
             <form onSubmit={handleSendMessage} className="flex gap-2 max-w-4xl mx-auto">
               <input 
                 type="text" 
                 value={newMessage} 
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 bg-[#0F1C18] border border-emerald-900/50 rounded-full px-5 py-3 text-white focus:border-emerald-500 outline-none transition shadow-inner"
+                className={`flex-1 border rounded-full px-5 py-3 focus:border-brand outline-none transition shadow-inner
+                  ${themeMode === 'dark' 
+                    ? 'bg-brand-dim border-brand/30 text-white placeholder-slate-500' 
+                    : 'bg-white border-brand/30 text-slate-800 placeholder-slate-400'
+                  }`}
               />
-              <button type="submit" disabled={!newMessage.trim()} className="bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition transform active:scale-95 shrink-0">➤</button>
+              <button 
+                type="submit" 
+                disabled={!newMessage.trim()} 
+                className="bg-brand hover:brightness-110 text-black w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition transform active:scale-95 shrink-0"
+              >
+                ➤
+              </button>
             </form>
           </div>
         </div>

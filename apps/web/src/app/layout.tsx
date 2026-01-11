@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext"; 
-import { ThemeProvider } from "@/providers/ThemeProvider"; // ★追加
+// ★ 前回作成した ThemeContext をインポート (パスに注意！)
+import { ThemeProvider } from "@/context/ThemeContext"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,15 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // ★suppressHydrationWarningを追加 (next-themes使用時は必須)
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja">
       <body className={inter.className}>
-        <AuthProvider>
-          {/* ★ThemeProviderで囲む (属性をclassモードに設定) */}
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        {/* ★ ThemeProvider で全体を囲む (これで色が全画面に適用されます) */}
+        <ThemeProvider>
+          <AuthProvider>
             {children}
-          </ThemeProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
