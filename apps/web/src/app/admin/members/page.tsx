@@ -72,7 +72,7 @@ export default function MembersPage() {
           {!loading && members.length === 0 && (
             <div className="text-center text-slate-500 mt-20 border-2 border-dashed border-slate-800 rounded-xl p-10">
               <p>No members found.</p>
-              <p className="text-sm mt-2">Click "Add New Member" to start.</p>
+              <p className="text-sm mt-2">Click &quot;Add New Member&quot; to start.</p>
             </div>
           )}
 
