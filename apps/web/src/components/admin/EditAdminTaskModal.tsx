@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore";
-import { AdminTask } from "@/types";
+import { AdminTask } from "@/models/AdminTask";
 
 type Props = {
   isOpen: boolean;

@@ -1,113 +1,32 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, onSnapshot, addDoc, Timestamp, getDocs } from "firebase/firestore";
 import StaffSidebar from "@/components/staff/StaffSidebar";
-// ★ テーマ機能を追加
-import { useTheme } from "@/context/ThemeContext";
-
-// 型定義
-type Message = {
-  id: string;
-  text: string;
-  senderName: string;
-  senderId: string;
-  createdAt: any;
-  roomId: string;
-};
-
-type ChatRoom = {
-  id: string;
-  name: string;
-  type: 'group' | 'direct';
-  icon?: string;
-};
-
-const GROUP_ROOMS: ChatRoom[] = [
-  { id: "general", name: "📣 General", type: 'group' },
-  { id: "random", name: "☕ Random", type: 'group' },
-  { id: "announcements", name: "🚨 Announcements", type: 'group' },
-];
+import { useStaffChat } from "@/hooks/useStaffChat";
 
 export default function StaffChatPage() {
-  const { user, loading } = useAuth();
-  // ★ テーマ情報を取得
-  const { backgroundStyle, baseTextColor, themeMode } = useTheme();
-  
-  const [selectedRoomId, setSelectedRoomId] = useState<string>("general");
-  const [selectedRoomName, setSelectedRoomName] = useState<string>("General");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [members, setMembers] = useState<ChatRoom[]>([]); 
-  const [activeTab, setActiveTab] = useState<'groups' | 'direct'>('groups');
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // 1. メンバーリスト取得
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const q = query(collection(db, "members"));
-        const snap = await getDocs(q);
-        const data = snap.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name,
-          type: 'direct' as const,
-          icon: doc.data().name.charAt(0)
-        }));
-        setMembers(data);
-      } catch (e) { console.error(e); }
-    };
-    fetchMembers();
-  }, []);
-
-  // 2. メッセージ取得
-  useEffect(() => {
-    const q = query(
-      collection(db, "staff_chats"), 
-      where("roomId", "==", selectedRoomId),
-      orderBy("createdAt", "asc")
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message)));
-    });
-    return () => unsubscribe();
-  }, [selectedRoomId]);
-
-  // 3. 自動スクロール
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // 送信処理
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !user) return;
-    try {
-      await addDoc(collection(db, "staff_chats"), {
-        text: newMessage,
-        senderName: user.displayName || "Staff",
-        senderId: user.uid,
-        roomId: selectedRoomId, 
-        createdAt: Timestamp.now(),
-      });
-      setNewMessage("");
-    } catch (error) { console.error(error); }
-  };
-
-  const handleSelectDM = (member: ChatRoom) => {
-    if (!user) return;
-    const ids = [user.uid, member.id].sort();
-    const dmRoomId = `${ids[0]}_${ids[1]}`;
-    setSelectedRoomId(dmRoomId);
-    setSelectedRoomName(member.name);
-  };
+  const {
+    user,
+    loading,
+    themeMode,
+    backgroundStyle,
+    baseTextColor,
+    selectedRoomId,
+    selectedRoomName,
+    messages,
+    newMessage,
+    setNewMessage,
+    members,
+    activeTab,
+    setActiveTab,
+    scrollRef,
+    handleSendMessage,
+    handleSelectDM,
+    handleSelectRoom,
+    GROUP_ROOMS
+  } = useStaffChat();
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-brand">LOADING...</div>;
 
   return (
-    // ★ 共通の背景スタイルを適用
     <div 
       className={`flex h-screen w-full font-sans overflow-hidden ${baseTextColor}`}
       style={backgroundStyle}
@@ -119,7 +38,7 @@ export default function StaffChatPage() {
       {/* メインエリア */}
       <main className="flex-1 flex h-full overflow-hidden relative">
         
-        {/* 左カラム：ルームリスト (白黒対応) */}
+        {/* 左カラム：ルームリスト */}
         <div className={`w-64 border-r border-brand/20 flex flex-col z-10 shrink-0 backdrop-blur-sm ${themeMode === 'dark' ? 'bg-black/40' : 'bg-white/60'}`}>
           <div className="p-4 border-b border-brand/20">
             <h1 className={`text-xl font-bold tracking-tight flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -154,7 +73,7 @@ export default function StaffChatPage() {
             {activeTab === 'groups' && GROUP_ROOMS.map(room => (
               <button 
                 key={room.id} 
-                onClick={() => { setSelectedRoomId(room.id); setSelectedRoomName(room.name); }} 
+                onClick={() => handleSelectRoom(room)} 
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 
                   ${selectedRoomId === room.id 
                     ? 'bg-brand/20 text-brand border border-brand/30' 
@@ -211,7 +130,6 @@ export default function StaffChatPage() {
                       {msg.senderName.charAt(0)}
                     </div>
                     
-                    {/* 吹き出し: 自分の発言は推し色、相手の発言はテーマに合わせて変化 */}
                     <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-md break-words whitespace-pre-wrap 
                       ${isMe 
                         ? "bg-brand text-black rounded-tr-none shadow-brand/20" 
@@ -238,7 +156,7 @@ export default function StaffChatPage() {
               <input 
                 type="text" 
                 value={newMessage} 
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => setNewMessage(e.target.value)} 
                 placeholder="Type a message..."
                 className={`flex-1 border rounded-full px-5 py-3 focus:border-brand outline-none transition shadow-inner
                   ${themeMode === 'dark' 

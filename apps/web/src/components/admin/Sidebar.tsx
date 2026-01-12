@@ -4,32 +4,58 @@ import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const isActive = (path: string) => pathname === path;
 
-  const getLinkClass = (path: string) => 
-    `text-2xl transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-lg
-    hover:bg-cyan-500/10 text-slate-400 hover:text-cyan-400
-    ${
-      isActive(path) 
-        ? "text-cyan-400 scale-110 bg-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-cyan-500/30" 
-        : "hover:scale-105"
-    }`;
+  // Admin機能の全メニュー定義
+  const MENU = [
+    { label: "DASHBOARD", path: "/admin/dashboard", icon: "📊" },
+    { label: "TASKS",     path: "/admin/tasks",     icon: "⚡" },
+    { label: "DUE TODAY", path: "/admin/duetoday",  icon: "⚠️" },
+    { label: "ON AIR",    path: "/admin/onair",     icon: "🔴" },
+    { label: "SCHEDULE",  path: "/admin/schedule",  icon: "📅" },
+    { label: "BOOKING",   path: "/admin/booking",   icon: "🎙️" },
+    { label: "MEMBERS",   path: "/admin/members",   icon: "👥" },
+    { label: "SETTINGS",  path: "/admin/settings",  icon: "⚙️" },
+  ];
 
   return (
-    <aside className="w-20 flex flex-col items-center py-8 border-r border-slate-800 bg-[#0F172A]/80 backdrop-blur-xl z-50">
+    <aside className="w-64 bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 z-20 transition-colors">
       
-      {/* Admin Logo */}
-      <div className="w-10 h-10 rounded-xl mb-10 flex items-center justify-center font-bold text-lg
-        bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
-        A
+      {/* ロゴエリア */}
+      <div className="p-6">
+        <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500">
+          V-Sync
+        </h1>
+        <p className="text-[10px] tracking-[0.3em] text-slate-400 font-bold mt-1">ADMIN PORTAL</p>
       </div>
 
-      <nav className="flex flex-col gap-8">
-        <Link href="/admin/dashboard" className={getLinkClass("/admin/dashboard")} title="Dashboard">🏠</Link>
-        <Link href="/admin/members" className={getLinkClass("/admin/members")} title="Members">👥</Link>
-        <Link href="/admin/schedule" className={getLinkClass("/admin/schedule")} title="Schedule">📅</Link>
-        <Link href="/admin/settings" className={getLinkClass("/admin/settings")} title="Settings">⚙️</Link>
+      {/* メニューエリア */}
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+        {MENU.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link 
+              key={item.path} 
+              href={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold tracking-wide transition-all
+                ${isActive 
+                  ? "bg-slate-100 dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm" 
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+            >
+              <span className="text-lg opacity-80 w-6 text-center">{item.icon}</span>
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
+
+      {/* フッター */}
+      <div className="p-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3 opacity-50">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          <span className="text-[10px] font-mono text-slate-500">SYSTEM: ONLINE</span>
+        </div>
+      </div>
     </aside>
   );
 }
