@@ -1,103 +1,33 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
-import { AdminTask, Schedule } from "../../../types"; 
+import Sidebar from "@/components/admin/Sidebar";
 import NewAdminTaskModal from "@/components/admin/NewAdminTaskModal";
 import EditAdminTaskModal from "@/components/admin/EditAdminTaskModal";
-import Sidebar from "@/components/admin/Sidebar";
+import AdminTaskCard from "@/components/admin/dashboard/AdminTaskCard";
+import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
 export default function AdminDashboard() {
-  const { user, role, loading } = useAuth();
-  const router = useRouter();
-  
-  const [adminTasks, setAdminTasks] = useState<AdminTask[]>([]);
-  const [todayStreamsCount, setTodayStreamsCount] = useState(0); 
-  const [dueTodayCount, setDueTodayCount] = useState(0);       
-  const [isLiveCount, setIsLiveCount] = useState(0);           
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<AdminTask | null>(null);
-
-  // ★日付が同じか判定するヘルパー関数
-  const isSameDay = (d1: Date, d2: Date) => {
-    return d1.getFullYear() === d2.getFullYear() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getDate() === d2.getDate();
-  };
-
-  const fetchDashboardData = useCallback(async () => {
-    if (role !== "admin") return;
-    try {
-      const today = new Date();
-
-      // 1. タスク取得 & 集計
-      const tasksQ = query(collection(db, "admin_tasks"), orderBy("createdAt", "desc"));
-      const tasksSnapshot = await getDocs(tasksQ);
-      const tasksData = tasksSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as AdminTask[];
-      setAdminTasks(tasksData);
-
-      // ★ここを修正: より確実な日付判定でカウント
-      const dueCount = tasksData.filter(t => {
-        if (!t.deadline || t.status === 'done') return false;
-        const d = new Date(t.deadline.seconds * 1000);
-        return isSameDay(d, today);
-      }).length;
-      setDueTodayCount(dueCount);
-
-      // 2. スケジュール取得 & 集計
-      const schedQ = query(collection(db, "schedules"));
-      const schedSnapshot = await getDocs(schedQ);
-      
-      let streamsToday = 0;
-      let liveNow = 0;
-
-      schedSnapshot.docs.forEach(doc => {
-        const d = doc.data() as Schedule;
-        const start = d.startAt instanceof Timestamp ? d.startAt.toDate() : new Date(d.startAt);
-        const end = d.endAt instanceof Timestamp ? d.endAt.toDate() : new Date(d.endAt);
-
-        // 今日の配信枠数 (ここもヘルパー関数を使用)
-        if (d.type === 'stream' && isSameDay(start, today)) {
-          streamsToday++;
-        }
-        // 現在放送中かどうか
-        if (d.type === 'stream' && today >= start && today <= end) {
-          liveNow++;
-        }
-      });
-
-      setTodayStreamsCount(streamsToday);
-      setIsLiveCount(liveNow);
-
-    } catch (error) {
-      console.error(error);
-    }
-  }, [role]);
-
-  useEffect(() => {
-    if (!loading && role !== "admin") router.push("/");
-    fetchDashboardData();
-  }, [loading, role, router, fetchDashboardData]);
-
-  const navigateTo = (path: string) => {
-    router.push(path);
-  };
+  const {
+    user,
+    loading,
+    role,
+    adminTasks,
+    todayStreamsCount,
+    dueTodayCount,
+    isLiveCount,
+    isModalOpen,
+    setIsModalOpen,
+    selectedTask,
+    setSelectedTask,
+    fetchDashboardData,
+    navigateTo,
+    handleCardClick
+  } = useAdminDashboard();
 
   if (loading || role !== "admin") return <div className="min-h-screen flex items-center justify-center text-cyan-500">LOADING...</div>;
 
   const todoTasks = adminTasks.filter(t => t.status === 'todo');
   const doingTasks = adminTasks.filter(t => t.status === 'doing');
   const doneTasks = adminTasks.filter(t => t.status === 'done');
-
-  const handleCardClick = (task: AdminTask) => {
-    setSelectedTask(task);
-  };
 
   return (
     <div className="flex h-screen w-screen bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 font-sans relative overflow-hidden transition-colors duration-300">
@@ -278,33 +208,6 @@ export default function AdminDashboard() {
 
       <NewAdminTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAdded={fetchDashboardData} />
       <EditAdminTaskModal isOpen={!!selectedTask} task={selectedTask} onClose={() => setSelectedTask(null)} onUpdated={fetchDashboardData} />
-    </div>
-  );
-}
-
-function AdminTaskCard({ task, onClick }: { task: AdminTask; onClick: () => void }) {
-  const priorityInfo = task.priority === 'high' 
-    ? 'text-red-500 dark:text-red-400 border-red-500/30 bg-red-50 dark:bg-slate-900' 
-    : task.priority === 'medium' 
-    ? 'text-yellow-600 dark:text-yellow-400 border-yellow-500/30 bg-yellow-50 dark:bg-slate-900' 
-    : 'text-green-600 dark:text-green-400 border-green-500/30 bg-green-50 dark:bg-slate-900';
-
-  return (
-    <div 
-      onClick={onClick}
-      className="bg-white dark:bg-[#1E293B] p-2.5 rounded border border-slate-200 dark:border-slate-700 hover:border-purple-500 dark:hover:border-purple-500 transition cursor-pointer group relative shadow-sm"
-    >
-      <div className="flex justify-between items-start mb-1">
-        <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${priorityInfo}`}>
-          {task.priority}
-        </span>
-        {task.deadline && (
-          <span className="text-[10px] text-slate-500">
-             ~ {new Date(task.deadline.seconds * 1000).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">{task.title}</h5>
     </div>
   );
 }

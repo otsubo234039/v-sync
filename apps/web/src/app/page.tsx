@@ -1,46 +1,16 @@
 "use client";
-import { useState } from "react";
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useLoginPage } from "@/hooks/useLoginPage"; // Controllerを読み込む
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Googleログイン
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      // 自動判定はせず、成功したら手動で移動させる
-      router.push("/staff/dashboard");
-    } catch (error: any) {
-      console.error("Login failed", error);
-      setError("Googleログインエラー: " + error.message);
-    }
-  };
-
-  // メールログイン
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-    setIsLoading(true);
-    setError("");
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // 自動判定はせず、成功したら手動で移動させる
-      router.push("/staff/dashboard");
-    } catch (err: any) {
-      setError("ログイン失敗: " + err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ロジックは全てフックにお任せ
+  const {
+    email, setEmail,
+    password, setPassword,
+    isLoading,
+    error,
+    handleGoogleLogin,
+    handleEmailLogin
+  } = useLoginPage();
 
   return (
     <div className="min-h-screen w-screen bg-[#050a0e] flex flex-col items-center justify-center relative overflow-hidden font-sans text-white">

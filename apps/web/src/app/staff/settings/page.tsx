@@ -1,20 +1,18 @@
 "use client";
-import { useTheme } from "@/context/ThemeContext";
 import StaffSidebar from "@/components/staff/StaffSidebar";
+import { useStaffSettings } from "@/hooks/useStaffSettings";
 
 export default function SettingsPage() {
-  const { accentColor, setAccentColor, themeMode, setThemeMode, backgroundStyle, baseTextColor } = useTheme();
-
-  const presets = [
-    { name: "Hacker Green", value: "#10b981" },
-    { name: "Snow White",   value: "#ffffff" },
-    { name: "Onyx Black",   value: "#475569" },
-    { name: "Cyber Blue",   value: "#06b6d4" },
-    { name: "Crimson Red",  value: "#ef4444" },
-    { name: "Royal Purple", value: "#a855f7" },
-    { name: "Neon Pink",    value: "#ec4899" },
-    { name: "Gold",         value: "#eab308" },
-  ];
+  const {
+    accentColor,
+    setAccentColor,
+    themeMode,
+    setThemeMode,
+    backgroundStyle,
+    baseTextColor,
+    COLOR_PRESETS,
+    handleHexChange
+  } = useStaffSettings();
 
   return (
     <div className={`flex h-screen w-screen font-sans relative overflow-hidden ${baseTextColor}`} style={backgroundStyle}>
@@ -46,7 +44,7 @@ export default function SettingsPage() {
             
             {/* プリセット */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {presets.map((preset) => (
+              {COLOR_PRESETS.map((preset) => (
                 <button
                   key={preset.value}
                   onClick={() => setAccentColor(preset.value)}
@@ -58,7 +56,7 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            {/* ★ カラーコード入力欄 */}
+            {/* カラーコード入力欄 */}
             <div>
               <label className="block text-sm font-bold opacity-70 mb-2">CUSTOM HEX COLOR</label>
               <div className="flex gap-4">
@@ -73,7 +71,7 @@ export default function SettingsPage() {
                   <input 
                     type="text" 
                     value={accentColor.replace('#', '')}
-                    onChange={(e) => setAccentColor(`#${e.target.value}`)}
+                    onChange={handleHexChange}
                     className={`w-full h-12 border rounded pl-8 pr-4 font-mono font-bold focus:border-brand outline-none transition-colors ${themeMode === 'dark' ? 'bg-black/50 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'}`}
                     placeholder="Enter Hex Code (e.g. FF00FF)"
                   />
