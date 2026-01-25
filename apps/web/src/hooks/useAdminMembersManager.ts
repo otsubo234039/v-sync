@@ -8,6 +8,7 @@ export const useAdminMembersManager = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // メンバー取得
   const fetchMembers = async () => {
     try {
       setLoading(true);
@@ -15,9 +16,14 @@ export const useAdminMembersManager = () => {
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Member[];
       setMembers(data);
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) { 
+      console.error(error); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
+  // デモデータ追加
   const addDemoMembers = async () => {
     if(!confirm("デモメンバー（3名）を追加しますか？")) return;
     try {

@@ -1,86 +1,149 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useTheme } from "next-themes";
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { COLOR_PRESETS } from "@/models/Theme";
 import EditProfileModal from "@/components/admin/EditProfileModal";
 
 export default function GeneralSettings() {
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { themeMode, setThemeMode, accentColor, setAccentColor } = useTheme();
   const router = useRouter();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setNotificationPermission(Notification.permission);
-    }
-  }, []);
-
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) { alert("非対応ブラウザです"); return; }
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-    if (permission === "granted") new Notification("V-Sync Notifications", { body: "通知オン🚀" });
-  };
-
-  const sendTestNotification = () => {
-    if (notificationPermission === "granted") new Notification("New Task", { body: "テスト通知です" });
-    else alert("通知を許可してください");
-  };
 
   const handleLogout = async () => {
     if (confirm("ログアウトしますか？")) {
-      try {
-        await signOut(auth);
-        router.push("/");
-      } catch (error) { console.error("Logout failed", error); }
+      await signOut(auth);
+      router.push("/");
     }
   };
 
   return (
-    <div className="max-w-2xl space-y-8 pb-20">
-      <section className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Profile Settings</h3>
-        <div className="flex items-center gap-6 mb-6">
-          <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-2xl">👤</div>
+    <div className="max-w-5xl pb-20 pt-4">
+      
+      {/* ヘッダー */}
+      <div className="mb-10">
+        <h2 className="text-xs font-bold tracking-widest mb-1 uppercase" style={{ color: accentColor }}>
+          SYSTEM SETTINGS
+        </h2>
+        <h1 className="text-3xl font-normal text-slate-800 dark:text-white">
+          THEME CONFIGURATION
+        </h1>
+      </div>
+
+      <div className="space-y-6">
+        
+        {/* BACKGROUND MODE CARD */}
+        <div className="bg-white dark:bg-[#111827] rounded-xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+           <h3 className="text-xs font-bold text-slate-400 mb-6 uppercase tracking-wider">Background Mode</h3>
+           <div className="grid grid-cols-2 gap-6">
+              
+              {/* DARK MODE BUTTON (グラデーション強化版) */}
+              <button 
+                onClick={() => setThemeMode('dark')}
+                className={`h-24 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 border relative overflow-hidden group
+                  ${themeMode === 'dark' 
+                    ? 'border-transparent scale-[1.02]' 
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-100'
+                  }`}
+                style={themeMode === 'dark' ? {
+                  // ベース色
+                  backgroundColor: '#050a0e',
+                  // ボーダー色
+                  borderColor: accentColor,
+                  borderWidth: '1px',
+                  // ★ここがポイント: アクセントカラーを使ったグラデーション
+                  backgroundImage: `linear-gradient(135deg, ${accentColor}40 0%, transparent 60%)`,
+                  // ★発光エフェクト (外側の光 + 内側の光)
+                  boxShadow: `0 0 25px ${accentColor}30, inset 0 0 10px ${accentColor}20`
+                } : {}}
+              >
+                 <span className="text-2xl relative z-10 drop-shadow-md">🌙</span>
+                 <span className={`font-bold text-sm tracking-widest relative z-10 ${themeMode === 'dark' ? 'text-white' : 'text-slate-500'}`}>
+                   DARK MODE
+                 </span>
+                 
+                 {/* 選択時のキラッとした反射エフェクト */}
+                 {themeMode === 'dark' && (
+                   <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                 )}
+              </button>
+
+              {/* LIGHT MODE BUTTON */}
+              <button 
+                onClick={() => setThemeMode('light')}
+                className={`h-24 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 border relative overflow-hidden
+                  ${themeMode === 'light' 
+                    ? 'scale-[1.02]' 
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-100'
+                  }`}
+                style={themeMode === 'light' ? {
+                  backgroundColor: '#ffffff',
+                  borderColor: accentColor,
+                  // 薄いグラデーション
+                  backgroundImage: `linear-gradient(135deg, ${accentColor}15 0%, transparent 60%)`,
+                  boxShadow: `0 0 20px ${accentColor}15`
+                } : {}}
+              >
+                 <span className="text-2xl relative z-10">☀️</span>
+                 <span className={`font-bold text-sm tracking-widest relative z-10 ${themeMode === 'light' ? 'text-slate-900' : 'text-slate-500'}`}>
+                   LIGHT MODE
+                 </span>
+              </button>
+           </div>
+        </div>
+
+        {/* ACCENT COLOR CARD */}
+        <div className="bg-white dark:bg-[#111827] rounded-xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+          <h3 className="text-lg font-normal text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+            🎨 Accent Color
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {COLOR_PRESETS.map((preset) => {
+              const isSelected = accentColor === preset.value;
+              return (
+                <button
+                  key={preset.value}
+                  onClick={() => setAccentColor(preset.value)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 border
+                    ${isSelected 
+                      ? 'bg-slate-50 dark:bg-slate-800/50 border-2 scale-105 shadow-sm' 
+                      : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  style={{ borderColor: isSelected ? accentColor : 'transparent' }}
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full shadow-sm ring-2 ring-white dark:ring-slate-700" 
+                    style={{ backgroundColor: preset.value }} 
+                  />
+                  <span className={`text-sm ${isSelected ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500'}`}>
+                    {preset.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom Hex */}
           <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Display Name</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{user?.displayName || "Admin User"}</p>
-          </div>
-          <button onClick={() => setIsEditProfileOpen(true)} className="ml-auto text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded text-slate-700 dark:text-white transition">Edit Profile</button>
-        </div>
-      </section>
-
-      <section className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">System Preferences</h3>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700/30">
-            <div><p className="text-slate-900 dark:text-white font-bold text-sm">Appearance</p><p className="text-xs text-slate-500">Customize theme</p></div>
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
-              <button onClick={() => setTheme("light")} className={`px-3 py-1 text-xs rounded-md transition font-bold ${theme === 'light' ? 'bg-white text-cyan-600 shadow' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>☀ Light</button>
-              <button onClick={() => setTheme("dark")} className={`px-3 py-1 text-xs rounded-md transition font-bold ${theme === 'dark' ? 'bg-slate-700 text-cyan-400 shadow' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>🌙 Dark</button>
-              <button onClick={() => setTheme("system")} className={`px-3 py-1 text-xs rounded-md transition font-bold ${theme === 'system' ? 'bg-slate-300 dark:bg-slate-600 text-slate-900 dark:text-white shadow' : 'text-slate-500'}`}>💻 System</button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700/30">
-            <div>
-              <p className="text-slate-900 dark:text-white font-bold text-sm flex items-center gap-2">Desktop Notifications {notificationPermission === 'granted' && <span className="text-[10px] bg-green-500/10 text-green-500 px-1.5 rounded border border-green-500/30">ON</span>}{notificationPermission === 'denied' && <span className="text-[10px] bg-red-500/10 text-red-500 px-1.5 rounded border border-red-500/30">BLOCKED</span>}</p>
-              <p className="text-xs text-slate-500">Get notified for new tasks</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {notificationPermission === 'granted' && <button onClick={sendTestNotification} className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition">🔔 Test</button>}
-              <div onClick={requestNotificationPermission} className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors duration-300 ${notificationPermission === 'granted' ? 'bg-cyan-600' : 'bg-slate-300 dark:bg-slate-600'}`}><div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow transition-all duration-300 ${notificationPermission === 'granted' ? 'left-6' : 'left-1'}`} /></div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Custom Hex Color</label>
+            <div className="flex gap-4">
+               <div className="w-12 h-12 rounded-lg shadow-inner border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0" style={{ backgroundColor: accentColor }}></div>
+               <div className="flex-1">
+                  <input 
+                    type="text"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="w-full h-12 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-mono text-sm outline-none focus:border-slate-400 transition text-slate-700 dark:text-white"
+                  />
+               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      <div className="text-center pt-10">
-        <button onClick={handleLogout} className="text-red-500 hover:text-red-600 text-sm hover:underline font-bold">Sign Out</button>
       </div>
       <EditProfileModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
     </div>
