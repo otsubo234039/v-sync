@@ -16,13 +16,17 @@
     "next": "^14.0.0",
     "next-auth": "^4.24.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
+    "@types/react-dropzone": "^4.2.2",
     "@types/semver": "^7.7.1",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "autoprefixer": "^10.4.0",

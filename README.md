@@ -1,234 +1,72 @@
-# V-Sync - Video Synchronization Platform
+V-Sync: VTuber Agency Management System
+1. V-Syncについて
+V-Syncは、Vtuber事務所を立ち上げる際に必要となる管理業務を統合するためのアプリケーションです 。
++1
 
-V-Sync は、動画を同期するための完全なプラットフォームです。Next.js フロントエンド、Firebase BaaS、AWS EC2 バッチ処理をシームレスに統合しています。
 
-## 🏗️ プロジェクト構成
+ターゲット: アプリ管理者（admin）、事務所企画部（Staff）、マネージャー（Manager）、所属ライバー（Liver）の4層を想定しています 。
 
-```
-V-Sync/
-├── apps/
-│   ├── web/               # フロント: Next.js + TypeScript + TailwindCSS
-│   └── batch/             # バッチ: Ruby + ShellScript
-├── .github/
-│   └── workflows/         # CI/CDパイプライン (GitHub Actions)
-├── docker-compose.yml     # Docker Compose 設定
-└── README.md             # このファイル
-```
 
-## 🛠️ 使用技術
+コンセプト: サイバーパンク・近未来風の世界観をUIに反映し、事務所のスケジュール、ライバー＆マネージャーのスケジュール、タスクを効率的に一元管理します 。
 
-### フロントエンド (Web)
-- **フレームワーク**: Next.js 14
-- **言語**: TypeScript
-- **スタイリング**: TailwindCSS
-- **BaaS**: Firebase (Authentication, Firestore, Storage)
-- **デプロイ先**: Vercel
+2. 開発形態
+本プロジェクトは、プロトタイプを早期に作成し、フィードバックを得ながら改良を重ねる手法を採用しています。
 
-### バックエンド (Batch)
-- **言語**: Ruby 3.2
-- **スクリプティング**: ShellScript
-- **コンテナ**: Docker
-- **ホスティング**: AWS EC2
-- **AWS SDK**: EC2, S3, CloudWatch
 
-### CI/CD
-- **プラットフォーム**: GitHub Actions
-- **テスト**: ESLint, TypeScript Type Check
-- **ビルド**: Next.js Build
-- **デプロイ**: Vercel, AWS EC2
+開発モデル: アジャイル開発（プロトタイプ先行型） 。
 
-## 📦 セットアップ
 
-### 前提条件
-- Node.js 18+
-- Ruby 3.2+
-- Docker & Docker Compose
-- AWS アカウント
-- Firebase プロジェクト
-- Vercel アカウント
-- GitHub リポジトリ
+設計手法: インフラの状態をコードで管理する IaC (Infrastructure as Code) を導入し、環境の再現性と堅牢性を確保しています 。
 
-### インストール手順
+3. 技術スタック＆開発環境
+AWS Academyの制約を考慮しつつ、最新のモダンな技術を組み合わせています。
 
-1. **リポジトリをクローン**
-```bash
-git clone https://github.com/yourusername/v-sync.git
-cd v-sync
-```
 
-2. **フロントエンド環境を設定**
-```bash
-cd apps/web
-cp .env.example .env.local
-npm install
-```
+フロントエンド: Next.js 14 (App Router) 。
 
-3. **環境変数を設定**
-```bash
-# Firebase 認証情報を .env.local に入力
-NEXT_PUBLIC_FIREBASE_API_KEY=your_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
-# 他の環境変数も設定
-```
+認証: Firebase Authentication によるユーザー識別とセッション維持 。
 
-4. **バッチ環境を設定**
-```bash
-cd ../batch
-cp .env.example .env
-bundle install
-```
+データベース: Firestore (NoSQL) による役割・タレント情報の保存 。
 
-5. **ローカル開発サーバーを起動**
-```bash
-# フロントエンド
-cd apps/web
-npm run dev
+ストレージ: Firebase Storage (メディアファイル保存) 。
 
-# バッチサービス (別のターミナル)
-cd apps/batch
-./batch_runner.sh start
-```
+インフラ: AWS EC2 (サーバー本体) および S3 。
 
-## 🚀 デプロイメント
+IaCツール: Terraform によるリソース管理 。
 
-### Vercel へのデプロイ
+4. 現在実装できているもの
+インフラ周り
+EC2構成: Amazon Linux 2023 / t3.small 環境の構築 。
 
-GitHub Actions が main ブランチへのプッシュを検出すると、自動的に Vercel へデプロイされます。
+ネットワーク: Elastic IP（固定IP: 98.89.142.157）の割り当て 。
 
-手動デプロイ:
-```bash
-cd apps/web
-npm install -g vercel
-vercel --prod
-```
+セキュリティ: SSH(22), HTTP(80), HTTPS(443), Dev(3000) のインバウンドルール設定 。
 
-### AWS EC2 へのデプロイ
+アプリケーション・DB
 
-バッチサービスは Docker コンテナとして AWS EC2 上で実行されます。
+画面構成: /admin (管理者専用ダッシュボード) および /staff (企画部専用画面) の基盤 。
 
-デプロイ前の準備:
-1. AWS EC2 インスタンスを起動
-2. Docker と Docker Compose をインストール
-3. AWS 認証情報を設定
+DBコレクション: admins, admin_tasks, bookings, staff_chats 等の初期構築完了。
 
-デプロイ実行:
-```bash
-docker-compose up -d
-```
+5. 今後実装していくもの
+企画部・マネージャー・ライバー向け機能
 
-## 📝 環境変数設定
+企画部 (Staff): スタジオ予約管理、プロジェクト全体の進捗確認機能 。
 
-詳細な環境変数設定については、[GITHUB_SECRETS.md](./GITHUB_SECRETS.md) を参照してください。
+マネージャー (Manager): 担当タレントのスケジュール・タスク管理および素材管理 。
 
-### Web アプリケーション (.env.local)
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-```
+ライバー (Liver): 自分自身の素材確認、ダウンロード、活動データの確認機能 。
 
-### バッチサービス (.env)
-```env
-AWS_REGION=ap-northeast-1
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-```
 
-## 🔧 コマンド
+残りのインフラ・システム周り
 
-### Web アプリケーション
+アクセス制御 (RBAC): FirebaseのUIDに基づき、役割に応じた画面遷移とディレクトリ制限の厳格化 。
 
-```bash
-cd apps/web
+IaCの完成: 完全に Terraform で定義を完結させ、ラボ終了後の復旧を自動化する。
 
-# 開発サーバーを起動
-npm run dev
+6. 開発メモ
+AWS Academy制約: ラボ終了ごとに環境が停止するため、EC2内での npm run dev 再開とセキュリティグループの確認が必要。
 
-# ビルド
-npm run build
+固定IP運用: 通信の安定化のため、98.89.142.157 をエンドポイントとして固定。
 
-# 本番サーバーを起動
-npm start
-
-# リンターを実行
-npm run lint
-
-# 型チェック
-npm run type-check
-
-# フォーマット
-npm run format
-```
-
-### バッチサービス
-
-```bash
-cd apps/batch
-
-# バッチプロセッサーを起動
-./batch_runner.sh start
-
-# バッチプロセッサーを停止
-./batch_runner.sh stop
-
-# ステータスを確認
-./batch_runner.sh status
-
-# ログを表示
-./batch_runner.sh logs
-
-# Docker コンテナをビルド・起動
-docker-compose up -d
-
-# Docker コンテナを停止
-docker-compose down
-```
-
-## 📚 ドキュメント
-
-- [GitHub Secrets 設定ガイド](./GITHUB_SECRETS.md)
-- [Firebase 設定ガイド](./apps/web/README.md)
-- [AWS EC2 設定ガイド](./apps/batch/README.md)
-
-## 🔐 セキュリティ
-
-- すべてのシークレットは GitHub Secrets に保存
-- 本番環境では環境変数で認証情報を管理
-- リポジトリには .env ファイルをコミットしない
-- 定期的にアクセスキーをローテーション
-
-## 🐛 トラブルシューティング
-
-### Firebase 接続エラー
-- Firebase プロジェクト ID が正しいか確認
-- API キーが有効か確認
-- Firestore のセキュリティルールを確認
-
-### AWS EC2 デプロイエラー
-- EC2 インスタンスが起動しているか確認
-- セキュリティグループの設定を確認
-- IAM 権限が正しく設定されているか確認
-
-### Vercel デプロイエラー
-- VERCEL_TOKEN が有効か確認
-- 環境変数が正しく設定されているか確認
-- ビルドログを確認
-
-## 📧 サポート
-
-問題が発生した場合は、GitHub Issues で報告してください。
-
-## 📄 ライセンス
-
-このプロジェクトは MIT ライセンスの下にあります。
-
-## 👥 貢献
-
-プルリクエストを歓迎します。大きな変更の場合は、まず Issue を開いて変更内容を議論してください。
-
----
-
-Made with ❤️ by V-Sync Team
+UI/UX: 標準のダークモードに加え、ネオンカラーをアクセントとしたNext.jsの最適化。
